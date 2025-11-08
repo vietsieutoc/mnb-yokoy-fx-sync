@@ -1,0 +1,2 @@
+# Minimal dependencies for MNB FX Sync
+mnb==1.0.1

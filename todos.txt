@@ -1,0 +1,32 @@
+# MNB Yokoy FX Sync - Project Todos
+
+## Phase 1: Basic Setup ✓ COMPLETED
+[✓] Clean up existing project files
+[✓] Create todos.txt tracker
+[✓] Setup minimal requirements.txt (just mnb==1.0.1)
+[✓] Create basic main.py to fetch and log MNB rates
+[✓] .gitignore already exists
+
+## Phase 2: Test and Enhance ✓ COMPLETED
+[✓] Install dependencies: pip install -r requirements.txt
+[✓] Test the basic script: python main.py
+[✓] Add ability to fetch rates for specific dates
+[✓] Add command line arguments (--date parameter)
+[✓] Add better error messages
+
+## Phase 3: Yokoy Integration (Ready to start)
+[ ] Add Yokoy API client
+[ ] Upload rates to Yokoy
+[ ] Add configuration management (.env file)
+
+## Phase 4: Production Features (Future)
+[ ] Add notifications (Teams/Email)
+[ ] Add retry logic
+[ ] Add logging improvements
+[ ] Add tests
+[ ] Add deployment configs
+
+---
+Last Updated: 2025-11-08
+Current Phase: 2 - Test and Enhance ✓ COMPLETED
+Next Step: Phase 3 - Yokoy Integration
