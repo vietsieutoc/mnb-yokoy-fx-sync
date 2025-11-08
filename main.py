@@ -3,12 +3,16 @@
 Simple MNB FX Rate Fetcher
 
 Fetches exchange rates from the Hungarian National Bank (MNB) using the mnb library.
+Can optionally upload rates to Yokoy.
 """
 
 import sys
 import argparse
 from datetime import datetime, date
 from mnb import Mnb
+
+from config import Config
+from yokoy_client import YokoyClient
 
 
 def fetch_current_rates(client):
@@ -66,13 +70,14 @@ def main():
     """Main function to fetch and display exchange rates from MNB"""
     # Setup argument parser
     parser = argparse.ArgumentParser(
-        description='Fetch exchange rates from Hungarian National Bank (MNB)',
+        description='Fetch exchange rates from Hungarian National Bank (MNB) and optionally upload to Yokoy',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s                    # Fetch current rates
-  %(prog)s --date 2025-11-07  # Fetch rates for specific date
-  %(prog)s -d 2025-11-07      # Same as above (short form)
+  %(prog)s                        # Fetch current rates
+  %(prog)s --date 2025-11-07      # Fetch rates for specific date
+  %(prog)s --upload               # Fetch and upload to Yokoy
+  %(prog)s -d 2025-11-07 --upload # Fetch specific date and upload
         """
     )
     
@@ -80,6 +85,12 @@ Examples:
         '--date', '-d',
         type=str,
         help='Fetch rates for specific date (format: YYYY-MM-DD)'
+    )
+    
+    parser.add_argument(
+        '--upload', '-u',
+        action='store_true',
+        help='Upload rates to Yokoy (requires YOKOY_API_KEY in .env)'
     )
     
     args = parser.parse_args()
@@ -98,7 +109,7 @@ Examples:
         if args.date:
             # Validate date format
             try:
-                datetime.strptime(args.date, '%Y-%m-%d')
+                target_date_obj = datetime.strptime(args.date, '%Y-%m-%d').date()
             except ValueError:
                 print(f"❌ Invalid date format: {args.date}")
                 print("   Please use YYYY-MM-DD format (e.g., 2025-11-07)")
@@ -107,12 +118,54 @@ Examples:
             rates_data = fetch_rates_for_date(client, args.date)
         else:
             rates_data = fetch_current_rates(client)
+            target_date_obj = rates_data.date if rates_data else None
         
         # Display results
         if rates_data:
             display_rates(rates_data)
         else:
             return 1
+        
+        # Upload to Yokoy if requested
+        if args.upload:
+            print("\n" + "=" * 60)
+            print("Yokoy Upload")
+            print("=" * 60)
+            
+            # Check if Yokoy is configured
+            if not Config.is_configured():
+                print("\n⚠️  Yokoy upload skipped: YOKOY_API_KEY not configured")
+                print("   Create a .env file with your YOKOY_API_KEY")
+                print("   Example: cp .env.example .env")
+                return 1
+            
+            try:
+                Config.validate()
+                print(f"\n🔗 Connecting to Yokoy API...")
+                print(f"   URL: {Config.YOKOY_API_URL}")
+                
+                yokoy = YokoyClient(Config.YOKOY_API_URL, Config.YOKOY_API_KEY)
+                
+                print(f"📤 Uploading {len(rates_data.rates)} rates for {target_date_obj}...")
+                result = yokoy.upload_fx_rates(rates_data, target_date_obj)
+                
+                if result.get('success'):
+                    print(f"\n✅ Successfully uploaded {result.get('rates_uploaded')} rates to Yokoy")
+                    print(f"   Status: {result.get('status_code')}")
+                else:
+                    print(f"\n❌ Failed to upload rates to Yokoy")
+                    print(f"   Error: {result.get('error')}")
+                    if result.get('error_detail'):
+                        print(f"   Details: {result.get('error_detail')}")
+                    return 1
+                    
+            except ValueError as e:
+                print(f"\n❌ Configuration error: {e}")
+                return 1
+            except Exception as e:
+                print(f"\n❌ Upload error: {e}")
+                print(f"   Type: {type(e).__name__}")
+                return 1
             
     except Exception as e:
         print(f"\n❌ Error: {e}")

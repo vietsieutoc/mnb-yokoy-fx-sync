@@ -1,2 +1,4 @@
-# Minimal dependencies for MNB FX Sync
+# Dependencies for MNB FX Sync
 mnb==1.0.1
+python-dotenv==1.0.0
+requests==2.31.0
