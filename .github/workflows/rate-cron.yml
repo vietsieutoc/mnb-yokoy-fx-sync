@@ -2,26 +2,23 @@ name: Run FX Rate Sync
 
 on:
   schedule:
-    # Runs in prod every day at 06:00 UTC
+    # Runs every 5 minutes for testing (change to "0 6 * * *" for daily 6 AM UTC)
     - cron: "*/5 * * * *"
 
-  # Allow manual triggers with environment selection
+  # Allow manual triggers
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - prod
+
+# Prevent multiple workflow runs from executing simultaneously
+# This ensures FX rate uploads don't overlap or conflict
+concurrency:
+  group: fx-sync
+  cancel-in-progress: false  # Let current run finish before starting next one
 
 jobs:
-  # Dev job - runs on manual trigger or can be scheduled separately
-  sync-dev:
+  sync-rates:
     runs-on: ubuntu-latest
     environment: dev
+    timeout-minutes: 5  # Kill job if it takes longer than 5 minutes (prevents hung processes)
     
     steps:
       - name: Checkout repo
@@ -31,14 +28,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip'
+          cache: 'pip'  # Cache pip packages for faster subsequent runs
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run FX sync script (Dev)
+      - name: Run FX sync script
         env:
           TEST_TOKEN: ${{ secrets.TEST_TOKEN }}
         run: |
-            echo $TEST_TOKEN
-            python main.py
+          echo $TEST_TOKEN
+          python main.py --upload
