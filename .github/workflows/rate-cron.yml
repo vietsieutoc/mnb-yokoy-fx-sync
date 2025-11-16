@@ -1,0 +1,43 @@
+name: Run FX Rate Sync
+
+on:
+  schedule:
+    # Runs in prod every day at 06:00 UTC
+    - cron: "*/5 * * * *"
+
+  # Allow manual triggers with environment selection
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  # Dev job - runs on manual trigger or can be scheduled separately
+  sync-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run FX sync script (Dev)
+        env:
+          TEST_TOKEN: ${{ secrets.TEST_TOKEN }}
+        run: |
+            echo ${TEST_TOKEN}
+            python main.py

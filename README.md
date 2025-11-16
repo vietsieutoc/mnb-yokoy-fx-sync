@@ -10,9 +10,16 @@ The tool can now fetch exchange rates from MNB and upload them to Yokoy's FX Rat
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Set Up Virtual Environment
 
 ```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -32,6 +39,9 @@ cp .env.example .env
 ### 3. Run the Tool
 
 ```bash
+# Make sure virtual environment is activated
+source venv/bin/activate
+
 # Fetch current exchange rates
 python main.py
 
