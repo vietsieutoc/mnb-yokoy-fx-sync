@@ -38,4 +38,4 @@ jobs:
           TEST_TOKEN: ${{ secrets.TEST_TOKEN }}
         run: |
           echo $TEST_TOKEN
-          python main.py --upload
+          python main.py
